@@ -373,21 +373,16 @@ app.delete("/my-bookings/:id", requireAuth, async (req, res) => {
   }
 });
 
-// ========================================
-// SERVER HEALTH CHECK
-// ========================================
 
-app.get("/", (req, res) => {
-  console.log("📡 Server health check");
-
-  res.status(200).send("StudioSpace Server is Running!");
-});
 
 // ========================================
 // START SERVER
 // ========================================
 
-
+app.listen(PORT, () => {
+  console.log(`🚀 Server is running on port ${PORT}`);
+  console.log(`🔐 Better Auth URL: ${BETTER_AUTH_URL}`);
+});
 
 
 // import { MongoClient } from 'mongodb';

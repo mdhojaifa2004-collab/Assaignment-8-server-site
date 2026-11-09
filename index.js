@@ -139,83 +139,35 @@ app.post("/singer-form", async (req, res) => {
   }
 });
 
+
+
 // ========================================
-// CREATE BOOKING
+// GET BOOKINGS - LOGGED-IN USER ONLY
 // ========================================
 
-app.post("/my-bookings", requireAuth, async (req, res) => {
+app.get("/my-bookings", requireAuth, async (req, res) => {
   try {
-    console.log("📩 New booking request received");
+    console.log("📡 Fetching bookings for:", req.user.email);
 
-    const {
-      studioId,
-      studioName,
-      category,
-      location,
-      date,
-      time,
-      hours,
-      total,
-      currency,
-    } = req.body;
+    const bookings = await myBookingsCollection
+      .find({
+        userId: req.user.id,
+      })
+      .sort({ createdAt: -1 })
+      .toArray();
 
-    const numericHours = Number(hours);
-    const numericTotal = Number(total);
+    console.log("✅ Bookings fetched:", bookings.length);
+    console.log("👤 Booking owner:", req.user.email);
 
-    if (
-      !studioId ||
-      !studioName ||
-      !date ||
-      !time ||
-      !Number.isFinite(numericHours) ||
-      numericHours < 1 ||
-      !Number.isFinite(numericTotal) ||
-      numericTotal < 0
-    ) {
-      console.log("❌ Invalid booking information");
-
-      return res.status(400).json({
-        message: "Invalid booking information",
-      });
-    }
-
-    const bookingData = {
-      studioId,
-      studioName,
-      category: category || "",
-      location: location || "",
-      date,
-      time,
-      hours: numericHours,
-      total: numericTotal,
-      currency: currency || "৳",
-
-      userId: req.user.id,
-      userEmail: req.user.email,
-
-      createdAt: new Date().toISOString(),
-    };
-
-    const result = await myBookingsCollection.insertOne(bookingData);
-
-    console.log("✅ Booking saved:", result.insertedId);
-    console.log("👤 Booking user:", req.user.email);
-
-    return res.status(201).json({
-      success: true,
-      message: "Booking saved successfully",
-      insertedId: result.insertedId,
-    });
+    return res.status(200).json(bookings);
   } catch (error) {
-    console.error("❌ Booking insert error:", error);
+    console.error("❌ Booking fetch error:", error);
 
     return res.status(500).json({
-      message: "Failed to add booking",
+      message: "Failed to fetch bookings",
     });
   }
 });
-
-
 
 // ========================================
 // UPDATE BOOKING - OWNER ONLY

@@ -326,54 +326,16 @@ app.put("/my-bookings/:id", requireAuth, async (req, res) => {
   }
 });
 
+
 // ========================================
-// DELETE BOOKING - OWNER ONLY
+// SERVER HEALTH CHECK
 // ========================================
 
-app.delete("/my-bookings/:id", requireAuth, async (req, res) => {
-  try {
-    const { id } = req.params;
+app.get("/", (req, res) => {
+  console.log("📡 Server health check");
 
-    console.log("🗑️ Booking cancellation requested:", id);
-
-    if (!ObjectId.isValid(id)) {
-      console.log("❌ Invalid booking ID:", id);
-
-      return res.status(400).json({
-        message: "Invalid booking ID",
-      });
-    }
-
-    const result = await myBookingsCollection.deleteOne({
-      _id: new ObjectId(id),
-      userId: req.user.id,
-    });
-
-    if (result.deletedCount === 0) {
-      console.log("❌ Booking not found:", id);
-
-      return res.status(404).json({
-        message: "Booking not found",
-      });
-    }
-
-    console.log("✅ Booking cancelled:", id);
-    console.log("👤 Cancelled by:", req.user.email);
-
-    return res.status(200).json({
-      success: true,
-      message: "Booking cancelled successfully",
-    });
-  } catch (error) {
-    console.error("❌ Booking delete error:", error);
-
-    return res.status(500).json({
-      message: "Failed to cancel booking",
-    });
-  }
+  res.status(200).send("StudioSpace Server is Running!");
 });
-
-
 
 // ========================================
 // START SERVER

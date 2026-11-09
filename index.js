@@ -100,58 +100,23 @@ async function requireAuth(req, res, next) {
       });
     }
 
+    req.user = sessionData.user;
 
-// import { MongoClient } from 'mongodb';
+    console.log("✅ Authenticated user:", req.user.email);
 
-// import 'dotenv/config'
-// import express from "express";
-// import cors from  "cors"
+    next();
+  } catch (error) {
+    console.error("❌ Authentication error:", error);
 
-// const app = express();
-// const PORT = 8000;
+    return res.status(500).json({
+      message: "Authentication failed",
+    });
+  }
+}
 
-// app.use(cors())
-// app.use(express.json())
-
-// const client = new MongoClient(process.env.MONGO_DB_SERVER);
-
-// export async function connectToMongoDB() {
-//   try {
-//     await client.connect();
-//     console.log("You successfully connected to MongoDB!");
-//     return client;
-//   } catch (err) {
-//     console.dir(err);
-//   }
-// }
-
-// const MongoClient = await connectToMongoDB();
-// const db = MongoClient.db("srudiospace")
-// const singerCollection = db.collection("singer")
-
-
-// app.post('/singer-form',async (req,res) => {
-//   const data = req.body
-//   const result = await singerCollection.insertOne(data)
-  
-  
-  
-//   console.log(result)
-//   res.send(result)
-// })
-
-// //http://localhost:8000/singer-form
-
-
-
-// app.get("/", (req, res) => {
-//   res.send("StudioSpace Server is Running!");
-// });
-
-// app.listen(PORT, () => {
-//   console.log(`Server is running on port ${PORT}`);
-// });
-
+// ========================================
+// SINGER FORM API
+// ========================================
 
 
 // thik kore daw console log rekho

@@ -243,16 +243,17 @@ app.get("/my-bookings", requireAuth, async (req, res) => {
   }
 });
 
+
+
 // ========================================
-// UPDATE BOOKING - OWNER ONLY
+// DELETE BOOKING - OWNER ONLY
 // ========================================
 
-app.put("/my-bookings/:id", requireAuth, async (req, res) => {
+app.delete("/my-bookings/:id", requireAuth, async (req, res) => {
   try {
     const { id } = req.params;
-    const { date, time, hours } = req.body;
 
-    console.log("✏️ Booking update requested:", id);
+    console.log("🗑️ Booking cancellation requested:", id);
 
     if (!ObjectId.isValid(id)) {
       console.log("❌ Invalid booking ID:", id);
@@ -262,70 +263,34 @@ app.put("/my-bookings/:id", requireAuth, async (req, res) => {
       });
     }
 
-    const numericHours = Number(hours);
-
-    if (
-      !date ||
-      !time ||
-      !Number.isFinite(numericHours) ||
-      numericHours < 1
-    ) {
-      return res.status(400).json({
-        message: "Invalid booking information",
-      });
-    }
-
-    const booking = await myBookingsCollection.findOne({
+    const result = await myBookingsCollection.deleteOne({
       _id: new ObjectId(id),
       userId: req.user.id,
     });
 
-    if (!booking) {
-      console.log("❌ Booking not found for user:", req.user.email);
+    if (result.deletedCount === 0) {
+      console.log("❌ Booking not found:", id);
 
       return res.status(404).json({
         message: "Booking not found",
       });
     }
 
-    const hourlyRate =
-      Number(booking.total) / Number(booking.hours);
-
-    const updatedTotal = hourlyRate * numericHours;
-
-    const result = await myBookingsCollection.updateOne(
-      {
-        _id: new ObjectId(id),
-        userId: req.user.id,
-      },
-      {
-        $set: {
-          date,
-          time,
-          hours: numericHours,
-          total: updatedTotal,
-          updatedAt: new Date().toISOString(),
-        },
-      }
-    );
-
-    console.log("✅ Booking updated:", id);
-    console.log("👤 Updated by:", req.user.email);
+    console.log("✅ Booking cancelled:", id);
+    console.log("👤 Cancelled by:", req.user.email);
 
     return res.status(200).json({
       success: true,
-      message: "Booking updated successfully",
-      modifiedCount: result.modifiedCount,
+      message: "Booking cancelled successfully",
     });
   } catch (error) {
-    console.error("❌ Booking update error:", error);
+    console.error("❌ Booking delete error:", error);
 
     return res.status(500).json({
-      message: "Failed to update booking",
+      message: "Failed to cancel booking",
     });
   }
 });
-
 
 // ========================================
 // SERVER HEALTH CHECK

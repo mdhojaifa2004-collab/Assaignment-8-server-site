@@ -215,35 +215,90 @@ app.post("/my-bookings", requireAuth, async (req, res) => {
   }
 });
 
+
+
 // ========================================
-// GET BOOKINGS - LOGGED-IN USER ONLY
+// UPDATE BOOKING - OWNER ONLY
 // ========================================
 
-app.get("/my-bookings", requireAuth, async (req, res) => {
+app.put("/my-bookings/:id", requireAuth, async (req, res) => {
   try {
-    console.log("📡 Fetching bookings for:", req.user.email);
+    const { id } = req.params;
+    const { date, time, hours } = req.body;
 
-    const bookings = await myBookingsCollection
-      .find({
+    console.log("✏️ Booking update requested:", id);
+
+    if (!ObjectId.isValid(id)) {
+      console.log("❌ Invalid booking ID:", id);
+
+      return res.status(400).json({
+        message: "Invalid booking ID",
+      });
+    }
+
+    const numericHours = Number(hours);
+
+    if (
+      !date ||
+      !time ||
+      !Number.isFinite(numericHours) ||
+      numericHours < 1
+    ) {
+      return res.status(400).json({
+        message: "Invalid booking information",
+      });
+    }
+
+    const booking = await myBookingsCollection.findOne({
+      _id: new ObjectId(id),
+      userId: req.user.id,
+    });
+
+    if (!booking) {
+      console.log("❌ Booking not found for user:", req.user.email);
+
+      return res.status(404).json({
+        message: "Booking not found",
+      });
+    }
+
+    const hourlyRate =
+      Number(booking.total) / Number(booking.hours);
+
+    const updatedTotal = hourlyRate * numericHours;
+
+    const result = await myBookingsCollection.updateOne(
+      {
+        _id: new ObjectId(id),
         userId: req.user.id,
-      })
-      .sort({ createdAt: -1 })
-      .toArray();
+      },
+      {
+        $set: {
+          date,
+          time,
+          hours: numericHours,
+          total: updatedTotal,
+          updatedAt: new Date().toISOString(),
+        },
+      }
+    );
 
-    console.log("✅ Bookings fetched:", bookings.length);
-    console.log("👤 Booking owner:", req.user.email);
+    console.log("✅ Booking updated:", id);
+    console.log("👤 Updated by:", req.user.email);
 
-    return res.status(200).json(bookings);
+    return res.status(200).json({
+      success: true,
+      message: "Booking updated successfully",
+      modifiedCount: result.modifiedCount,
+    });
   } catch (error) {
-    console.error("❌ Booking fetch error:", error);
+    console.error("❌ Booking update error:", error);
 
     return res.status(500).json({
-      message: "Failed to fetch bookings",
+      message: "Failed to update booking",
     });
   }
 });
-
-
 
 // ========================================
 // DELETE BOOKING - OWNER ONLY

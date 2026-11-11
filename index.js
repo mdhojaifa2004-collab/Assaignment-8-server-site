@@ -47,6 +47,7 @@ const DEFAULT_ORIGINS = [
   "http://localhost:3001",
   "http://127.0.0.1:3000",
   "http://127.0.0.1:3001",
+  "https://a-8-studio-space-9ez2.vercel.app"
 ];
 const CONFIGURED_ORIGINS = (process.env.CLIENT_URL || "")
   .split(",")

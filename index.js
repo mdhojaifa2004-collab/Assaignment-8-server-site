@@ -19,7 +19,7 @@ function parsePort(value) {
 const NODE_ENV = process.env.NODE_ENV || "development";
 const IS_PRODUCTION = NODE_ENV === "production";
 
-const PORT = parsePort(process.env.PORT) || 5000;
+const PORT = parsePort(process.env.PORT) || 8000;
 
 // The old StudioSpace frontend still calls port 8000. In development we can
 // keep that working without touching either frontend. Set LEGACY_PORT=off to
@@ -1641,3 +1641,7 @@ if (LEGACY_PORT && LEGACY_PORT !== PORT) {
 }
 
 console.log(`🔐 Better Auth URL: ${BETTER_AUTH_URL}`);
+
+
+
+export default app;

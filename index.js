@@ -38,6 +38,15 @@ const BETTER_AUTH_URL = (
   process.env.BETTER_AUTH_URL || "http://localhost:3000"
 ).replace(/\/+$/, "");
 
+if (
+  IS_PRODUCTION &&
+  /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(BETTER_AUTH_URL)
+) {
+  console.warn(
+    "⚠️ BETTER_AUTH_URL points to localhost in production. Session checks will fail until it is set to the deployed frontend URL.",
+  );
+}
+
 const JWT_SECRET = process.env.JWT_SECRET;
 const JWT_COOKIE_NAME = "studiospace_token";
 const JWT_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
@@ -1371,6 +1380,24 @@ app.post("/my-bookings", requireAuth, async (req, res) => {
     ) {
       console.log("❌ Invalid booking information");
       return res.status(400).json({ message: "Invalid booking information" });
+    }
+
+    // Repeated clicks (or a retried request) must not create duplicate
+    // records for the same user, studio and time slot.
+    const existingBooking = await myBookingsCollection.findOne({
+      userId: req.user.id,
+      studioId,
+      date,
+      time,
+    });
+
+    if (existingBooking) {
+      return res.status(200).json({
+        success: true,
+        duplicate: true,
+        message: "This booking already exists",
+        insertedId: existingBooking._id,
+      });
     }
 
     const bookingData = {
